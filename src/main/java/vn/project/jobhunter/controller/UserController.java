@@ -4,14 +4,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.turkraft.springfilter.boot.Filter;
 
+import jakarta.validation.Valid;
 import vn.project.jobhunter.domain.User;
-import vn.project.jobhunter.domain.dto.ResultPaginationDTO;
+import vn.project.jobhunter.domain.response.ResCreateUserDTO;
+import vn.project.jobhunter.domain.response.ResUpdateUserDTO;
+import vn.project.jobhunter.domain.response.ResUserDTO;
+import vn.project.jobhunter.domain.response.ResultPaginationDTO;
 import vn.project.jobhunter.service.UserService;
+import vn.project.jobhunter.util.annotation.ApiMessage;
+import vn.project.jobhunter.util.error.IdInvalidException;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -24,7 +26,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -39,59 +40,58 @@ public class UserController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @GetMapping("/users/create")
-    public String createMethodName() {
-
-        // User user = new User();
-        // user.setName("quyet");
-        // user.setEmail("Quyet@gmail.com");
-        // user.setPassword("852258789");
-        // this.userService.handleCreateUser(user);
-
-        return "create for fun";
-    }
-
     @GetMapping("/users")
+    @ApiMessage("Get all User")
     public ResponseEntity<ResultPaginationDTO> getUser(
             @Filter Specification<User> spec, Pageable pageable) {
-        // String sCurrent = currentOptional.isPresent() ? currentOptional.get() : "";
-        // String sPageSize = pageSizeOptional.isPresent() ? pageSizeOptional.get() :
-        // "";
-
-        // int current = Integer.parseInt(sCurrent);
-        // int pageSize = Integer.parseInt(sPageSize);
-
-        // Pageable pageable = PageRequest.of(current - 1, pageSize);
-
-        // List<User> getAllUserById = this.userService.handleGetAllUser(pageable);
         return ResponseEntity.ok(this.userService.handleGetAllUser(spec, pageable));
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUser(@PathVariable("id") long id) {
-
-        User getUserById = this.userService.handleGetUser(id);
-        return ResponseEntity.status(HttpStatus.OK).body(getUserById);
-
+    @ApiMessage("Get User with ID")
+    public ResponseEntity<ResUserDTO> getUserById(@PathVariable("id") Long id) throws IdInvalidException {
+        User fetchUser = userService.fetchUserById(id);
+        if (fetchUser == null) {
+            throw new IdInvalidException("User với id = " + id + " không tồn tại");
+        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(this.userService.convertToResUserDTO(fetchUser));
     }
 
     @PostMapping("/users")
-    public ResponseEntity<User> postMethodName(@RequestBody User createdUser) {
-        String HashCode = passwordEncoder.encode(createdUser.getPassword());
-        createdUser.setPassword(HashCode);
-        User newUser = this.userService.handleCreateUser(createdUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+    @ApiMessage("Create a new user")
+    public ResponseEntity<ResCreateUserDTO> postMethodName(@Valid @RequestBody User postManUser)
+            throws IdInvalidException {
+        boolean isEmailExist = this.userService.isEmailExist(postManUser.getEmail());
+        if (isEmailExist) {
+            throw new IdInvalidException(
+                    "Email " + postManUser.getEmail() + " đã tồn tại, vui lòng sử dụng email khác");
+        }
+        String HashCode = passwordEncoder.encode(postManUser.getPassword());
+        postManUser.setPassword(HashCode);
+        User newUser = this.userService.handleCreateUser(postManUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.convertToResCreateUserDTO(newUser));
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<Void> deleteMethodName(@PathVariable("id") long id) {
+    @ApiMessage("Delete a user")
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") long id) throws IdInvalidException {
+        User currentUser = this.userService.fetchUserById(id);
+        if (currentUser == null) {
+            throw new IdInvalidException("User với id = " + id + " không tồn tại");
+        }
         this.userService.handleDeleteUser(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.ok(null);
     }
 
     @PutMapping("/users")
-    public ResponseEntity<User> updateUser(@RequestBody User newInfo) {
-        User updateUser = userService.handleUpdateUser(newInfo);
-        return ResponseEntity.status(HttpStatus.OK).body(updateUser);
+    @ApiMessage("Update a user")
+    public ResponseEntity<ResUpdateUserDTO> updateUser(@RequestBody User user) throws IdInvalidException {
+        User updateUser = this.userService.handleUpdateUser(user);
+        if (updateUser == null) {
+            throw new IdInvalidException("User với id = " + user.getId() + " không tồn tại");
+        }
+        return ResponseEntity.ok(this.userService.convertToResUpdateUserDTO(updateUser));
     }
+
 }

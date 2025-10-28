@@ -41,7 +41,7 @@ public class SecurityConfiguration {
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         grantedAuthoritiesConverter.setAuthorityPrefix("");
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("myKey");
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("permission");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
@@ -57,7 +57,9 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(
                         authz ->
                         // prettier-ignore
-                        authz.requestMatchers("/", "/login").permitAll().anyRequest().authenticated()
+                        authz.requestMatchers("/", "/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
+                                .anyRequest().permitAll()
+                // .authenticated()
 
                 )
                 .oauth2ResourceServer((oauth2) -> oauth2

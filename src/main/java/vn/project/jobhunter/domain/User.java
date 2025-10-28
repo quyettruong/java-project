@@ -1,51 +1,47 @@
 package vn.project.jobhunter.domain;
 
+import java.time.Instant;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
+import vn.project.jobhunter.util.constant.GenderEnum;
 
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     private String name;
+    @NotBlank(message = "Email can not be blank")
     private String email;
+    @NotBlank(message = "Password can not be blank")
     private String password;
 
-    public long getId() {
-        return id;
-    }
+    private int age;
 
-    public void setId(long id) {
-        this.id = id;
-    }
+    @Enumerated(EnumType.STRING)
+    private GenderEnum gender;
 
-    public String getName() {
-        return name;
-    }
+    private String address;
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    @Column(columnDefinition = "MEDIUMTEXT")
+    private String refreshToken;
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    private Instant createdAt;
+    private Instant updatedAt;
+    private String createdBy;
+    private String updatedBy;
 }

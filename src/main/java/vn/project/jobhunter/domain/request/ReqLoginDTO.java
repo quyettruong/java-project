@@ -1,11 +1,11 @@
-package vn.project.jobhunter.domain.dto;
+package vn.project.jobhunter.domain.request;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class LoginDTO {
+public class ReqLoginDTO {
     @NotBlank(message = "don let it blank")
     private String username;
-    @NotBlank(message = "don let password")
+    @NotBlank(message = "don let password blank")
     private String password;
 
     public String getUsername() {

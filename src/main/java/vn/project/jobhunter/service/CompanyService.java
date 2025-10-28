@@ -8,8 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import vn.project.jobhunter.domain.Company;
-import vn.project.jobhunter.domain.dto.Meta;
-import vn.project.jobhunter.domain.dto.ResultPaginationDTO;
+import vn.project.jobhunter.domain.response.ResultPaginationDTO;
 import vn.project.jobhunter.repository.CompanyRepository;
 import vn.project.jobhunter.util.error.IdInvalidException;
 
@@ -24,7 +23,7 @@ public class CompanyService {
     public ResultPaginationDTO handleGetAllCompany(Specification<Company> spec, Pageable pageable) {
         Page<Company> pageCompany = this.companyRepository.findAll(spec, pageable);
         ResultPaginationDTO rs = new ResultPaginationDTO();
-        Meta mt = new Meta();
+        ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
 
         mt.setPage(pageCompany.getNumber() + 1);
         mt.setPageSize(pageCompany.getSize());
